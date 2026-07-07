@@ -25,7 +25,7 @@ dependencies:
   # ================= STORAGE =================
   shared_preferences: ^2.2.2
   
-  font_awesome_flutter: ^10.13.0
+  font_awesome_flutter: ^11.0.0
 
   # ================= UI =================
   google_fonts: ^6.2.1
