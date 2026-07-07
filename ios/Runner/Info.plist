@@ -66,5 +66,31 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+<!-- Camera Permission -->
+	<key>NSCameraUsageDescription</key>
+	<string>JRF VHub uses the camera to scan QR codes and capture photos for job work, dispatch, and document verification.</string>
+
+	<!-- Photo Library Permission -->
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>JRF VHub uses the photo library to allow users to select and upload images and documents.</string>
+
+	<!-- Save Photos Permission -->
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>JRF VHub saves images and documents to your photo library when requested.</string>
+
+	<!-- Location Permission -->
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>JRF VHub uses your location to record attendance and verify your work location.</string>
+
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>JRF VHub uses your location during work-related activities when permission is granted.</string>
+
+	<!-- Microphone Permission -->
+	<key>NSMicrophoneUsageDescription</key>
+	<string>JRF VHub uses the microphone for voice recording when required.</string>
+
+	<!-- Notification Permission -->
+	<key>NSUserNotificationsUsageDescription</key>
+	<string>JRF VHub sends notifications for attendance, job work updates, dispatch updates, and important alerts.</string>
 </dict>
 </plist>
