@@ -66,5 +66,19 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSCameraUsageDescription</key>
+	<string>JRF VHub uses the camera to scan QR codes and capture images.</string>
+	
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>JRF VHub uses the photo library so users can select and upload images and documents.</string>
+	
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>JRF VHub saves images and documents to your photo library when required.</string>
+	
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>JRF VHub uses your location while using the app for attendance, field work and location-based features.</string>
+	
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>JRF VHub may use your location to support attendance and field operations.</string>
 </dict>
 </plist>
