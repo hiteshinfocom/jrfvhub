@@ -29,6 +29,20 @@ class ChatService {
         data["room_id"].toString());
   }
 
+  Future<List<dynamic>> getAdminRooms() async {
+  final response = await http.get(
+    Uri.parse("$baseUrl/get_admin_rooms.php"),
+  );
+
+  final data = jsonDecode(response.body);
+
+  if (data["status"] == true) {
+    return data["data"] ?? [];
+  }
+
+  return [];
+}
+
   Future<List<dynamic>>
       getMessages(int roomId) async {
     final response =

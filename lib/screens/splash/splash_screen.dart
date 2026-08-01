@@ -58,7 +58,7 @@ class _SplashScreenState extends State<SplashScreen>
         await SharedPreferences.getInstance();
 
     bool isLogin =
-        prefs.getBool("isLogin") ?? false;
+      prefs.getBool("logged_in") ?? false;
 
     if (!mounted) return;
 

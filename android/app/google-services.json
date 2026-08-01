@@ -9,7 +9,26 @@
       "client_info": {
         "mobilesdk_app_id": "1:984724570156:android:f09294bf7dfc0378559189",
         "android_client_info": {
-          "package_name": "com.example.jrfvhub"
+          "package_name": "com.jrfpl.jrfvhub"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBvfL21jqBSD0hjyfIbqmR7R1YTH-rCTwY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:984724570156:android:7552f723d9bb5444559189",
+        "android_client_info": {
+          "package_name": "com.jrfpl.vhub"
         }
       },
       "oauth_client": [],
@@ -28,7 +47,7 @@
       "client_info": {
         "mobilesdk_app_id": "1:984724570156:android:58a8950c9a3d07d0559189",
         "android_client_info": {
-          "package_name": "com.jupiter.jrfvhub"
+          "package_name": "com.jrfpl.jrfvhub"
         }
       },
       "oauth_client": [],

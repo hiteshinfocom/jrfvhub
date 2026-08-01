@@ -5,7 +5,15 @@ import '../../services/auth_service.dart';
 import '../dashboard/pdf_viewer_screen.dart';
 
 class JobWorkScreen extends StatefulWidget {
-  const JobWorkScreen({super.key});
+
+  final String? status;
+  final bool todayOnly;
+
+  const JobWorkScreen({
+    super.key,
+    this.status,
+    this.todayOnly = false,
+  });
 
   @override
   State<JobWorkScreen> createState() =>
@@ -26,6 +34,11 @@ class _JobWorkScreenState
   // ================= FILTER DATA =================
 
   List<dynamic> filteredList = [];
+
+  int assignedCount = 0;
+  int acceptedCount = 0;
+  int processCount = 0;
+  int completedCount = 0;
 
   // ================= SEARCH =================
 
@@ -80,14 +93,44 @@ class _JobWorkScreenState
   );
 
   searchController.clear();
-  selectedStatus = "All";
 
-  setState(() {
-    jobWorkList = data;
-    filteredList = data;
-    isLoading = false;
-  });
+  selectedStatus = widget.status ?? "All";
+
+
+  assignedCount = 0;
+acceptedCount = 0;
+processCount = 0;
+completedCount = 0;
+
+for (final item in data) {
+  switch (item["status"].toString().toLowerCase()) {
+    case "assigned":
+      assignedCount++;
+      break;
+
+    case "accepted":
+      acceptedCount++;
+      break;
+
+    case "in process":
+    case "partially completed":
+      processCount++;
+      break;
+
+    case "completed":
+      completedCount++;
+      break;
+  }
 }
+
+setState(() {
+  jobWorkList = data;
+  filteredList = data;
+  isLoading = false;
+});
+
+applyFilters();
+  }
 
   // ================= SEARCH FILTER =================
 
@@ -221,38 +264,26 @@ class _JobWorkScreenState
 
           summaryBox(
             "Assigned",
-            jobWorkList.where((e) =>
-              e["status"]
-              .toString()
-              .toLowerCase() ==
-              "assigned").length,
+            assignedCount,
+            "assigned",
           ),
 
           summaryBox(
             "Accepted",
-            jobWorkList.where((e) =>
-              e["status"]
-              .toString()
-              .toLowerCase() ==
-              "accepted").length,
+            acceptedCount,
+            "accepted",
           ),
 
           summaryBox(
             "Process",
-            jobWorkList.where((e) =>
-              e["status"]
-              .toString()
-              .toLowerCase() ==
-              "in process").length,
+            processCount,
+            "in process",
           ),
 
           summaryBox(
             "Done",
-            jobWorkList.where((e) =>
-              e["status"]
-              .toString()
-              .toLowerCase() ==
-              "completed").length,
+            completedCount,
+            "completed",
           ),
         ],
       ),
@@ -673,8 +704,9 @@ class _JobWorkScreenState
                                       TableRow(
                                         children: [
                                           tableValue(
-                                            item["drawing_no"].toString(),
+                                            "${item["drawing_no"]}\nRev: ${item["revision"] ?? "-"}",
                                           ),
+                                          
                                           tableValue(
                                             item["issue_qty"].toString(),
                                           ),
@@ -792,50 +824,111 @@ class _JobWorkScreenState
 
   void applyFilters() {
 
-  List<dynamic> data = jobWorkList;
+  List<dynamic> data = List.from(jobWorkList);
 
-  // Search Filter
-  if (searchController.text.isNotEmpty) {
+  // Search
+
+  if(searchController.text.isNotEmpty){
 
     final search =
-        searchController.text.toLowerCase();
+        searchController.text
+        .toLowerCase();
 
-    data = data.where((item) {
+    data = data.where((item){
 
       return item["jobwork_no"]
-              .toString()
-              .toLowerCase()
-              .contains(search) ||
+          .toString()
+          .toLowerCase()
+          .contains(search)
 
-          item["item_name"]
-              .toString()
-              .toLowerCase()
-              .contains(search) ||
+      ||
 
-          item["drawing_no"]
-              .toString()
-              .toLowerCase()
-              .contains(search);
+      item["item_name"]
+          .toString()
+          .toLowerCase()
+          .contains(search)
+
+      ||
+
+      item["drawing_no"]
+          .toString()
+          .toLowerCase()
+          .contains(search);
 
     }).toList();
   }
 
-  // Status Filter
-  if (selectedStatus != "All") {
+  // Status
 
-    data = data.where((item) {
+  if(selectedStatus != "All"){
+
+    data = data.where((item){
 
       return item["status"]
-              .toString()
-              .toLowerCase() ==
-          selectedStatus;
+          .toString()
+          .trim()
+          .toLowerCase()
+
+      ==
+
+      selectedStatus
+          .trim()
+          .toLowerCase();
+
+    }).toList();
+  }
+
+  // Today
+
+  if(widget.todayOnly){
+
+    final today =
+        DateTime.now();
+
+    final todayDate =
+
+        "${today.day.toString().padLeft(2,'0')}-"
+        "${_month(today.month)}-"
+        "${today.year}";
+
+    data = data.where((item){
+
+      return item["issue_date"]
+          .toString()
+          .startsWith(todayDate);
 
     }).toList();
   }
 
   setState(() {
+
     filteredList = data;
+
   });
+
+}
+
+String _month(int month){
+
+  const months = [
+
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec"
+
+  ];
+
+  return months[month-1];
+
 }
   void showApproveDialog(dynamic item) {
 
@@ -844,40 +937,20 @@ class _JobWorkScreenState
 
   DateTime? returnDate;
 
-  showModalBottomSheet(
-    context: context,
-    isScrollControlled: true,
-    backgroundColor: Colors.transparent,
-    builder: (context) {
-
-      return StatefulBuilder(
-        builder: (context, setDialogState) {
-
-          return Container(
-            padding: EdgeInsets.only(
-              left: 20,
-              right: 20,
-              top: 20,
-              bottom:
-                  MediaQuery.of(context)
-                      .viewInsets
-                      .bottom +
-                  20,
-            ),
-
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              borderRadius:
-                  BorderRadius.vertical(
-                top: Radius.circular(25),
-              ),
-            ),
-
+  showDialog(
+  context: context,
+  builder: (context) {
+    return StatefulBuilder(
+      builder: (context, setDialogState) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
             child: SingleChildScrollView(
               child: Column(
-                mainAxisSize:
-                    MainAxisSize.min,
-
+                mainAxisSize: MainAxisSize.min,
                 children: [
 
                   Container(
@@ -1079,14 +1152,15 @@ class _JobWorkScreenState
                       },
                     ),
                   ),
-                ],
+                 ],
               ),
             ),
-          );
-        },
-      );
-    },
-  );
+          ),
+        );
+      },
+    );
+  },
+);
 }
 
 void showDispatchDialog(dynamic item) {
@@ -1291,27 +1365,35 @@ static Widget tableValue(
 Widget summaryBox(
   String title,
   int count,
+  String status,
 ) {
-  return Column(
-    children: [
-
-      Text(
-        count.toString(),
-        style: const TextStyle(
-          color: Colors.white,
-          fontWeight: FontWeight.bold,
-          fontSize: 18,
+  return InkWell(
+    borderRadius: BorderRadius.circular(12),
+    onTap: () {
+      setState(() {
+        selectedStatus = status;
+      });
+      applyFilters();
+    },
+    child: Column(
+      children: [
+        Text(
+          count.toString(),
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+          ),
         ),
-      ),
-
-      Text(
-        title,
-        style: const TextStyle(
-          color: Colors.white70,
-          fontSize: 11,
+        Text(
+          title,
+          style: const TextStyle(
+            color: Colors.white70,
+            fontSize: 11,
+          ),
         ),
-      ),
-    ],
+      ],
+    ),
   );
 }
 Widget buildStatusActions(

@@ -181,6 +181,13 @@ class ChatBotScreen extends StatelessWidget {
             ),
 
             departmentCard(
+            icon: Icons.computer,
+            title: "IT Support",
+            subtitle: "App, Login & Technical Support",
+            color: Colors.indigo,
+          ),
+
+            departmentCard(
               icon: Icons
                   .shopping_bag_outlined,
               title:

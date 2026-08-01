@@ -1,15 +1,20 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 
 import 'firebase_options.dart';
 import 'config/routes.dart';
 import 'config/app_theme.dart';
+import 'services/notification_service.dart';
 
-import 'screens/web/web_pair_screen.dart';
-// અથવા જો સીધું web dashboard ખોલવું હોય
-// import 'screens/web/web_dashboard_screen.dart';
+@pragma('vm:entry-point')
+Future<void> firebaseMessagingBackgroundHandler(
+    RemoteMessage message) async {
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+}
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -17,6 +22,12 @@ Future<void> main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+
+  FirebaseMessaging.onBackgroundMessage(
+    firebaseMessagingBackgroundHandler,
+  );
+
+  await NotificationService.instance.initialize();
 
   runApp(const VendorPortalApp());
 }
@@ -26,23 +37,6 @@ class VendorPortalApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
-    // WEB
-    if (kIsWeb) {
-      return GetMaterialApp(
-        title: 'JRFVHub Web',
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.lightTheme,
-
-        // QR Pairing Screen
-        home: const WebPairScreen(),
-
-        // અથવા સીધું Dashboard
-        // home: const WebDashboardScreen(),
-      );
-    }
-
-    // MOBILE
     return GetMaterialApp(
       title: 'Jupiter Vendor Portal',
       debugShowCheckedModeBanner: false,

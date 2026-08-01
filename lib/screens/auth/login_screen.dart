@@ -26,7 +26,75 @@ class _LoginScreenState
 
   // ================= LOGIN FUNCTION =================
 
-  Future<void> login() async { if (userController.text.trim().isEmpty) { Get.snackbar( "Error", "Please Enter Vendor ID", backgroundColor: Colors.red, colorText: Colors.white, ); return; } if (passController.text.trim().isEmpty) { Get.snackbar( "Error", "Please Enter Password", backgroundColor: Colors.red, colorText: Colors.white, ); return; } setState(() { loading = true; }); try { final response = await AuthService.login( vendorCode: userController.text.trim(), password: passController.text.trim(), ); if (!mounted) return; if (response != null && response["status"] == true) { Get.snackbar( "Success", response["message"] ?? "Login Successful", backgroundColor: Colors.green, colorText: Colors.white, ); Get.offAllNamed( Routes.dashboard, ); } else { Get.snackbar( "Login Failed", response["message"] ?? "Invalid Credentials", backgroundColor: Colors.red, colorText: Colors.white, ); } } catch (e) { if (!mounted) return; Get.snackbar( "Error", e.toString(), backgroundColor: Colors.red, colorText: Colors.white, ); } finally { if (mounted) { setState(() { loading = false; }); } } }
+  Future<void> login() async {
+  if (userController.text.trim().isEmpty) {
+    Get.snackbar(
+      "Error",
+      "Please Enter Vendor ID",
+      backgroundColor: Colors.red,
+      colorText: Colors.white,
+    );
+    return;
+  }
+
+  if (passController.text.trim().isEmpty) {
+    Get.snackbar(
+      "Error",
+      "Please Enter Password",
+      backgroundColor: Colors.red,
+      colorText: Colors.white,
+    );
+    return;
+  }
+
+  setState(() {
+    loading = true;
+  });
+
+  try {
+    final response = await AuthService.login(
+      vendorCode: userController.text.trim(),
+      password: passController.text.trim(),
+    );
+
+    if (!mounted) return;
+
+    if (response != null && response["status"] == true) {
+
+      Get.snackbar(
+        "Success",
+        response["message"] ?? "Login Successful",
+        backgroundColor: Colors.green,
+        colorText: Colors.white,
+      );
+
+      Get.offAllNamed(Routes.dashboard);
+
+    } else {
+      Get.snackbar(
+        "Login Failed",
+        response["message"] ?? "Invalid Credentials",
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
+  } catch (e) {
+    if (!mounted) return;
+
+    Get.snackbar(
+      "Error",
+      e.toString(),
+      backgroundColor: Colors.red,
+      colorText: Colors.white,
+    );
+  } finally {
+    if (mounted) {
+      setState(() {
+        loading = false;
+      });
+    }
+  }
+}
 
   @override
   Widget build(BuildContext context) {

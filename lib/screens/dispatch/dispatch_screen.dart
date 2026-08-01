@@ -3,7 +3,13 @@ import '../../services/dispatch_service.dart';
 import '../../services/auth_service.dart';
 
 class DispatchScreen extends StatefulWidget {
-  const DispatchScreen({super.key});
+
+  final bool todayOnly;
+
+  const DispatchScreen({
+    super.key,
+    this.todayOnly = false,
+  });
 
   @override
   State<DispatchScreen> createState() =>
@@ -13,13 +19,38 @@ class DispatchScreen extends StatefulWidget {
 class _DispatchScreenState
     extends State<DispatchScreen> {
 
-  final TextEditingController
-      searchController =
-      TextEditingController();
-      List<dynamic> transportList = [];
+  final TextEditingController searchController =
+    TextEditingController();
+
+List<dynamic> transportList = [];
 List<dynamic> filteredList = [];
 
 bool isLoading = true;
+
+/// Filter
+String selectedStatus = "All";
+String selectedDateFilter = "All";
+
+/// Summary
+int totalDispatch = 0;
+int deliveredCount = 0;
+int transitCount = 0;
+int pendingCount = 0;
+
+Widget filterChip(
+  String status,
+  StateSetter setSheetState,
+) {
+  return ChoiceChip(
+    label: Text(status),
+    selected: selectedStatus == status,
+    onSelected: (_) {
+      setSheetState(() {
+        selectedStatus = status;
+      });
+    },
+  );
+}
 
   @override
   void dispose() {
@@ -33,27 +64,82 @@ bool isLoading = true;
     loadDispatch();
   }
 
-Future<void> loadDispatch() async {
-  try {
-    final vendor =
-        await AuthService.getVendor();
+  void searchDispatch(String value) {
+  final query = value.trim().toLowerCase();
 
-    final data =
-        await DispatchService.getDispatchList(
+  if (query.isEmpty) {
+    filteredList = List.from(transportList);
+
+    setState(() {});
+    return;
+  }
+
+  filteredList = transportList.where((item) {
+
+    bool contains(dynamic field) =>
+        field
+            .toString()
+            .toLowerCase()
+            .contains(query);
+
+    return
+
+        contains(item['itemCode']) ||
+
+        contains(item['DrawingNo']) ||
+
+        contains(item['Itemname']) ||
+
+        contains(item['DriverName']) ||
+
+        contains(item['VehicleNo']) ||
+
+        contains(item['Department']) ||
+
+        contains(item['Status']) ||
+
+        contains(item['Remark']) ||
+
+        contains(item['Qty']) ||
+
+        contains(item['DateOfPickUp']);
+
+  }).toList();
+
+  setState(() {});
+}
+
+Future<void> loadDispatch() async {
+  setState(() {
+    isLoading = true;
+  });
+
+  try {
+    final vendor = await AuthService.getVendor();
+
+    final data = await DispatchService.getDispatchList(
       vendor['partycode'] ?? '',
       vendor['usertype'] ?? 'Vendor',
     );
 
-    setState(() {
-      transportList = data;
-      filteredList = data;
-      isLoading = false;
-    });
-  } catch (e) {
-    debugPrint(e.toString());
+    transportList = data;
+
+    // Calculate summary counts
+    calculateSummary();
+
+    // Initially show all data
+    filteredList = List.from(transportList);
 
     setState(() {
       isLoading = false;
+    });
+  } catch (e) {
+    debugPrint("Dispatch Error: $e");
+
+    setState(() {
+      isLoading = false;
+      transportList = [];
+      filteredList = [];
     });
   }
 }
@@ -73,6 +159,276 @@ Future<void> loadDispatch() async {
       return Colors.blue;
   }
 }
+
+void calculateSummary() {
+  totalDispatch = transportList.length;
+
+  deliveredCount = transportList.where((item) {
+    return (item['Status'] ?? '')
+            .toString()
+            .trim()
+            .toUpperCase() ==
+        "DELIVERED";
+  }).length;
+
+  transitCount = transportList.where((item) {
+    final status = (item['Status'] ?? '')
+        .toString()
+        .trim()
+        .toUpperCase();
+
+    return status == "IN TRANSIT" ||
+        status == "TRANSIT";
+  }).length;
+
+  pendingCount = transportList.where((item) {
+    return (item['Status'] ?? '')
+            .toString()
+            .trim()
+            .toUpperCase() ==
+        "PENDING";
+  }).length;
+}
+
+Widget summaryCard(
+  String title,
+  String value,
+  Color color,
+  IconData icon,
+) {
+  return Container(
+    padding: const EdgeInsets.all(14),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(18),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withOpacity(.05),
+          blurRadius: 8,
+          offset: const Offset(0, 3),
+        ),
+      ],
+    ),
+    child: Row(
+      children: [
+
+        CircleAvatar(
+          radius: 22,
+          backgroundColor: color.withOpacity(.12),
+          child: Icon(
+            icon,
+            color: color,
+          ),
+        ),
+
+        const SizedBox(width: 12),
+
+        Expanded(
+          child: Column(
+            crossAxisAlignment:
+                CrossAxisAlignment.start,
+            mainAxisAlignment:
+                MainAxisAlignment.center,
+            children: [
+
+              Text(
+                title,
+                style: const TextStyle(
+                  color: Colors.grey,
+                  fontSize: 13,
+                ),
+              ),
+
+              const SizedBox(height: 3),
+
+              Text(
+                value,
+                style: TextStyle(
+                  color: color,
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        )
+      ],
+    ),
+  );
+}
+
+void showFilterBottomSheet() {
+  showModalBottomSheet(
+    context: context,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(
+        top: Radius.circular(25),
+      ),
+    ),
+    builder: (_) {
+      return StatefulBuilder(
+        builder: (context, setSheetState) {
+          return Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment:
+                  CrossAxisAlignment.start,
+              children: [
+
+                const Center(
+                  child: Text(
+                    "Filter Dispatch",
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+
+                Wrap(
+                  spacing: 8,
+                  children: [
+                    filterChip("All", setSheetState),
+                    filterChip("Delivered", setSheetState),
+                    filterChip("In Transit", setSheetState),
+                    filterChip("Pending", setSheetState),
+                  ],
+                ),
+
+                const SizedBox(height: 25),
+
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      applyFilter();
+                    },
+                    child: const Text("Apply Filter"),
+                  ),
+                ),
+
+                TextButton(
+                  onPressed: () {
+                    selectedStatus = "All";
+                    Navigator.pop(context);
+                    applyFilter();
+                  },
+                  child: const Text("Reset"),
+                ),
+              ],
+            ),
+          );
+        },
+      );
+    },
+  );
+}
+
+
+
+void applyFilter() {
+  final now = DateTime.now();
+
+  filteredList = transportList.where((item) {
+
+    //-------------------------
+    // STATUS FILTER
+    //-------------------------
+
+    bool statusMatch = true;
+
+    if (selectedStatus != "All") {
+
+      final status = (item['Status'] ?? '')
+          .toString()
+          .trim()
+          .toUpperCase();
+
+      switch (selectedStatus) {
+
+        case "Delivered":
+          statusMatch = status == "DELIVERED";
+          break;
+
+        case "In Transit":
+          statusMatch =
+              status == "IN TRANSIT" ||
+              status == "TRANSIT";
+          break;
+
+        case "Pending":
+          statusMatch = status == "PENDING";
+          break;
+      }
+    }
+
+    //-------------------------
+    // DATE FILTER
+    //-------------------------
+
+    bool dateMatch = true;
+
+    if (selectedDateFilter != "All") {
+
+      try {
+
+        final dispatchDate =
+            DateTime.parse(
+                item['DateOfPickUp']);
+
+        switch (selectedDateFilter) {
+
+          case "Today":
+
+            dateMatch =
+                dispatchDate.year ==
+                    now.year &&
+                dispatchDate.month ==
+                    now.month &&
+                dispatchDate.day ==
+                    now.day;
+
+            break;
+
+          case "Last 7 Days":
+
+            dateMatch = dispatchDate.isAfter(
+              now.subtract(
+                const Duration(days: 7),
+              ),
+            );
+
+            break;
+
+          case "This Month":
+
+            dateMatch =
+                dispatchDate.month ==
+                    now.month &&
+                dispatchDate.year ==
+                    now.year;
+
+            break;
+        }
+
+      } catch (_) {
+        dateMatch = false;
+      }
+    }
+
+    return statusMatch && dateMatch;
+
+  }).toList();
+
+  searchDispatch(searchController.text);
+
+  setState(() {});
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -117,76 +473,47 @@ Future<void> loadDispatch() async {
 
           // SUMMARY CARD
 
-          Container(
+          Padding(
+  padding: const EdgeInsets.all(12),
+  child: GridView.count(
+    shrinkWrap: true,
+    physics: const NeverScrollableScrollPhysics(),
+    crossAxisCount: 2,
+    childAspectRatio: 2.2,
+    crossAxisSpacing: 10,
+    mainAxisSpacing: 10,
+    children: [
 
-            margin:
-                const EdgeInsets.all(12),
+      summaryCard(
+        "Total",
+        totalDispatch.toString(),
+        Colors.blue,
+        Icons.inventory_2,
+      ),
 
-            padding:
-                const EdgeInsets.all(16),
+      summaryCard(
+        "Delivered",
+        deliveredCount.toString(),
+        Colors.green,
+        Icons.check_circle,
+      ),
 
-            decoration: BoxDecoration(
+      summaryCard(
+        "Transit",
+        transitCount.toString(),
+        Colors.orange,
+        Icons.local_shipping,
+      ),
 
-              gradient:
-                  const LinearGradient(
-                colors: [
-                  Color(0xff2563EB),
-                  Color(0xff3B82F6),
-                ],
-              ),
-
-              borderRadius:
-                  BorderRadius.circular(
-                18,
-              ),
-            ),
-
-            child: Row(
-
-              children: [
-
-                const CircleAvatar(
-                  radius: 26,
-                  backgroundColor:
-                      Colors.white24,
-                  child: Icon(
-                    Icons.local_shipping,
-                    color: Colors.white,
-                    size: 28,
-                  ),
-                ),
-
-                const SizedBox(
-                  width: 15,
-                ),
-
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment:
-                        CrossAxisAlignment.start,
-                    children: [
-
-                      const Text(
-                        "Total Dispatch",
-                        style: TextStyle(
-                          color: Colors.white70,
-                        ),
-                      ),
-
-                      Text(
-                        filteredList.length.toString(),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 26,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                )
-              ],
-            ),
-          ),
+      summaryCard(
+        "Pending",
+        pendingCount.toString(),
+        Colors.red,
+        Icons.pending_actions,
+      ),
+    ],
+  ),
+),
 
           // SEARCH
 
@@ -197,63 +524,67 @@ Future<void> loadDispatch() async {
               horizontal: 12,
             ),
 
-            child: TextField(
+            child: Row(
+  children: [
 
-              controller: searchController,
+    Expanded(
+      child: TextField(
+        controller: searchController,
+        onChanged: (value) {
+          searchDispatch(value);
+          setState(() {});
+        },
+        decoration: InputDecoration(
+          hintText:
+              "Search Item, Drawing, Driver, Vehicle...",
 
-              onChanged: (value) {
+          prefixIcon: const Icon(Icons.search),
 
-                setState(() {
+          suffixIcon: searchController.text.isNotEmpty
+              ? IconButton(
+                  icon: const Icon(Icons.clear),
+                  onPressed: () {
+                    searchController.clear();
+                    searchDispatch("");
+                    setState(() {});
+                  },
+                )
+              : null,
 
-                  filteredList =
-                      transportList.where((item) {
+          filled: true,
+          fillColor: Colors.white,
 
-                    return item['itemCode']
-                            .toString()
-                            .toLowerCase()
-                            .contains(
-                              value.toLowerCase(),
-                            ) ||
+          border: OutlineInputBorder(
+            borderRadius:
+                BorderRadius.circular(15),
+            borderSide: BorderSide.none,
+          ),
+        ),
+      ),
+    ),
 
-                        item['DrawingNo']
-                            .toString()
-                            .toLowerCase()
-                            .contains(
-                              value.toLowerCase(),
-                            );
+    const SizedBox(width: 10),
 
-                  }).toList();
-                });
-              },
-
-              decoration: InputDecoration(
-
-                hintText:
-                    "Search Item Code / Drawing No",
-
-                prefixIcon:
-                    const Icon(
-                  Icons.search,
-                ),
-
-                filled: true,
-
-                fillColor:
-                    Colors.white,
-
-                border:
-                    OutlineInputBorder(
-
-                  borderRadius:
-                      BorderRadius.circular(
-                    15,
-                  ),
-
-                  borderSide:
-                      BorderSide.none,
-                ),
-              ),
-            ),
+    InkWell(
+      onTap: showFilterBottomSheet,
+      borderRadius:
+          BorderRadius.circular(15),
+      child: Container(
+        width: 55,
+        height: 55,
+        decoration: BoxDecoration(
+          color: Colors.blue,
+          borderRadius:
+              BorderRadius.circular(15),
+        ),
+        child: const Icon(
+          Icons.filter_alt_rounded,
+          color: Colors.white,
+        ),
+      ),
+    ),
+  ],
+),
           ),
 
           const SizedBox(height: 10),
