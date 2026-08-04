@@ -19,15 +19,20 @@ Future<void> firebaseMessagingBackgroundHandler(
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
 
-  FirebaseMessaging.onBackgroundMessage(
-    firebaseMessagingBackgroundHandler,
-  );
+    FirebaseMessaging.onBackgroundMessage(
+      firebaseMessagingBackgroundHandler,
+    );
 
-  await NotificationService.instance.initialize();
+    await NotificationService.instance.initialize();
+  } catch (e, s) {
+    debugPrint("Startup Error: $e");
+    debugPrintStack(stackTrace: s);
+  }
 
   runApp(const VendorPortalApp());
 }

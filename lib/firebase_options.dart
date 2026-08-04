@@ -25,7 +25,10 @@ class DefaultFirebaseOptions {
       case TargetPlatform.iOS:
         return ios;
       case TargetPlatform.macOS:
-        return macos;
+        throw UnsupportedError(
+          'DefaultFirebaseOptions have not been configured for macos - '
+          'you can reconfigure this by running the FlutterFire CLI again.',
+        );
       case TargetPlatform.windows:
         return windows;
       case TargetPlatform.linux:
@@ -52,7 +55,7 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyBvfL21jqBSD0hjyfIbqmR7R1YTH-rCTwY',
-    appId: '1:984724570156:android:f09294bf7dfc0378559189',
+    appId: '1:984724570156:android:7552f723d9bb5444559189',
     messagingSenderId: '984724570156',
     projectId: 'jrfvhub',
     storageBucket: 'jrfvhub.firebasestorage.app',
@@ -60,20 +63,11 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyDaLyrSYMpVh0gXBLtpUhTVZzcWzPGJROs',
-    appId: '1:984724570156:ios:52d4e5521dd435d0559189',
+    appId: '1:984724570156:ios:8ac46ab87559769f559189',
     messagingSenderId: '984724570156',
     projectId: 'jrfvhub',
     storageBucket: 'jrfvhub.firebasestorage.app',
-    iosBundleId: 'com.example.jrfvhub',
-  );
-
-  static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyDaLyrSYMpVh0gXBLtpUhTVZzcWzPGJROs',
-    appId: '1:984724570156:ios:52d4e5521dd435d0559189',
-    messagingSenderId: '984724570156',
-    projectId: 'jrfvhub',
-    storageBucket: 'jrfvhub.firebasestorage.app',
-    iosBundleId: 'com.example.jrfvhub',
+    iosBundleId: 'com.jrfpl.vhub',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(

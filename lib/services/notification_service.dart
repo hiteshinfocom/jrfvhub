@@ -72,12 +72,17 @@ class NotificationService {
           AndroidFlutterLocalNotificationsPlugin>()
       ?.createNotificationChannel(channel);
 
-  const android = AndroidInitializationSettings(
-    "@mipmap/ic_launcher",
+  const android = AndroidInitializationSettings('@mipmap/ic_launcher');
+
+  const darwin = DarwinInitializationSettings(
+    requestAlertPermission: true,
+    requestBadgePermission: true,
+    requestSoundPermission: true,
   );
 
   const settings = InitializationSettings(
     android: android,
+    iOS: darwin,
   );
 
   await _local.initialize(

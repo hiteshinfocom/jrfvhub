@@ -1,11 +1,7 @@
-import 'dart:io';
-
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:open_filex/open_filex.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
+import 'package:flutter_file_downloader/flutter_file_downloader.dart';
 import 'package:flutter/services.dart';
 
 class PdfViewerScreen extends StatefulWidget {
@@ -41,66 +37,51 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
   }
 
   Future<void> _downloadPdf() async {
-    if (widget.pdfUrl.isEmpty) return;
+  if (widget.pdfUrl.isEmpty) return;
 
-    try {
-      setState(() {
-        _downloading = true;
-      });
+  setState(() {
+    _downloading = true;
+  });
 
-      if (Platform.isAndroid) {
-        await Permission.storage.request();
-        await Permission.manageExternalStorage.request();
-      }
+  FileDownloader.downloadFile(
+    url: widget.pdfUrl,
+    name: "${widget.drawingNo}.pdf",
 
-      Directory dir;
-
-      if (Platform.isAndroid) {
-        dir = Directory('/storage/emulated/0/Download');
-
-        if (!dir.existsSync()) {
-          dir.createSync(recursive: true);
-        }
-      } else {
-        dir = await getApplicationDocumentsDirectory();
-      }
-
-      final filePath = "${dir.path}/${widget.drawingNo}.pdf";
-
-      await Dio().download(
-        widget.pdfUrl,
-        filePath,
-      );
-
+    onDownloadCompleted: (String path) {
       if (!mounted) return;
+
+      setState(() {
+        _downloading = false;
+      });
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text("PDF Downloaded"),
+          content: const Text("PDF Downloaded"),
           action: SnackBarAction(
             label: "OPEN",
             onPressed: () {
-              OpenFilex.open(filePath);
+              OpenFilex.open(path);
             },
           ),
         ),
       );
-    } catch (e) {
+    },
+
+    onDownloadError: (String error) {
       if (!mounted) return;
+
+      setState(() {
+        _downloading = false;
+      });
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text("Download Failed\n$e"),
+          content: Text(error),
         ),
       );
-    } finally {
-      if (mounted) {
-        setState(() {
-          _downloading = false;
-        });
-      }
-    }
-  }
+    },
+  );
+}
 
   @override
   Widget build(BuildContext context) {
