@@ -66,5 +66,25 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSCameraUsageDescription</key>
+	<string>Camera is required to scan QR codes and capture images.</string>
+
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Photo Library access is required to select images.</string>
+
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Photo Library access is required to save images.</string>
+
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Location is required for attendance and field tracking.</string>
+
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Location is required for attendance and field tracking when permitted.</string>
+
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Microphone is required for voice recording.</string>
+
+	<key>FirebaseAppDelegateProxyEnabled</key>
+	<true/>
 </dict>
 </plist>
