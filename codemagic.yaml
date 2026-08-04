@@ -1,26 +1,47 @@
 workflows:
   android-ios-release:
-    name: Android & iOS Release
+    name: JRF VHub Android & iOS Release
+
+    max_build_duration: 120
+
+    integrations:
+      app_store_connect: Codemagic
+      google_play: Codemagic
 
     environment:
       flutter: stable
       xcode: latest
       cocoapods: default
 
+      vars:
+        BUNDLE_ID: "com.jrfpl.vhub"
+        PACKAGE_NAME: "com.jrfpl.vhub"
+
+      groups:
+        - google_play
+        - app_store_credentials
+        - keystore_credentials
+
     cache:
       cache_paths:
-        - $FLUTTER_ROOT/.pub-cache
-        - ~/.pub-cache
+        - $HOME/.pub-cache
+        - $HOME/Library/Caches/CocoaPods
         - ios/Pods
+        - ~/.gradle/caches
+        - ~/.gradle/wrapper
 
     scripts:
       - name: Flutter Clean
         script: |
           flutter clean
 
-      - name: Get Packages
+      - name: Pub Get
         script: |
           flutter pub get
+
+      - name: Flutter Analyze
+        script: |
+          flutter analyze || true
 
       - name: Install CocoaPods
         script: |
@@ -28,19 +49,46 @@ workflows:
           pod install
           cd ..
 
-      - name: Build Android AppBundle
+      - name: Build Android AAB
         script: |
           flutter build appbundle --release
+
+      - name: Build Android APK
+        script: |
+          flutter build apk --release
 
       - name: Build iOS IPA
         script: |
           flutter build ipa --release
 
     artifacts:
-      - build/app/outputs/**/*.aab
+      - build/app/outputs/bundle/**/*.aab
+      - build/app/outputs/flutter-apk/*.apk
       - build/ios/ipa/*.ipa
+      - build/app/outputs/mapping/release/mapping.txt
+      - flutter_drive.log
+      - /tmp/xcodebuild_logs/*.log
+      - test-results/**/*.xml
 
     publishing:
+      google_play:
+        credentials: $GOOGLE_PLAY_SERVICE_ACCOUNT_CREDENTIALS
+        track: internal
+        submit_as_draft: true
+        changes_not_sent_for_review: true
+
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
+        beta_groups:
+          - Internal Testing
+        submit_to_app_store: false
+        cancel_previous_submissions: true
+        expire_build_submitted_for_review: true
+
       email:
         recipients:
           - hiteshjotangiya91@gmail.com
+        notify:
+          success: true
+          failure: true
