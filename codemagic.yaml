@@ -1,0 +1,46 @@
+workflows:
+  android-ios-release:
+    name: Android & iOS Release
+
+    environment:
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+
+    cache:
+      cache_paths:
+        - $FLUTTER_ROOT/.pub-cache
+        - ~/.pub-cache
+        - ios/Pods
+
+    scripts:
+      - name: Flutter Clean
+        script: |
+          flutter clean
+
+      - name: Get Packages
+        script: |
+          flutter pub get
+
+      - name: Install CocoaPods
+        script: |
+          cd ios
+          pod install
+          cd ..
+
+      - name: Build Android AppBundle
+        script: |
+          flutter build appbundle --release
+
+      - name: Build iOS IPA
+        script: |
+          flutter build ipa --release
+
+    artifacts:
+      - build/app/outputs/**/*.aab
+      - build/ios/ipa/*.ipa
+
+    publishing:
+      email:
+        recipients:
+          - hiteshjotangiya91@gmail.com
